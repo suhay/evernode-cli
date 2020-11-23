@@ -1,0 +1,29 @@
+{
+  "name": "@suhay/evernode-cli",
+  "version": "1.1.0",
+  "main": "src/index.js",
+  "repository": "git@github.com:suhay/evernode-cli.git",
+  "author": "Matt Suhay <matthew.suhay@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@types/evernote": "^2.0.0",
+    "commander": "^6.2.0",
+    "dotenv": "^8.2.0",
+    "evernote": "^2.0.5",
+    "oauth": "^0.9.15"
+  },
+  "devDependencies": {
+    "typescript": "^4.0.5"
+  },
+  "scripts": {
+    "vscode:prepublish": "webpack --mode production",
+    "webpack": "webpack --mode development",
+    "webpack-dev": "webpack --mode development --watch",
+    "test-compile": "tsc -p ./",
+    "compile": "tsc -p ./",
+    "lint": "eslint src --ext ts",
+    "watch": "tsc -watch -p ./",
+    "pretest": "yarn run compile && yarn run lint",
+    "test": "node ./out/test/runTest.js"
+  }
+}

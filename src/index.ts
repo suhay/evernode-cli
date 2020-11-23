@@ -4,7 +4,7 @@ import * as rl from 'readline'
 import os from 'os'
 import { program } from 'commander'
 
-import { client, listNotebooks } from './api'
+import { client, getNotebooks } from './api'
 
 const readline = rl.createInterface({
   input: process.stdin,
@@ -16,6 +16,9 @@ const pathToConfig = path.resolve(`${homedir}/.evernode`)
 
 program
   .option('-l, --list', 'list all notebooks')
+  .option('-i, --init', 'sets current directory as the notebook root')
+  .option('-o, --open', 'opens the specified notebook and downloads all notes')
+  .option('-s, --sync', 'syncs the current notebook directory, or updates notebook cache if within the notebook root'
 
 program.version('0.0.1')
 
@@ -33,11 +36,12 @@ SANDBOX=true`)
   })
 } else {
   program.parse(process.argv)
-  const noteClient = client()
+  const notebookClient = client()
 
   if (noteClient) {
     if (program.list) {
-      listNotebooks(noteClient)
+      getNotebooks(notebookClient)
+        .finally(() => process.exit())
     }
   } else {
     process.exit()

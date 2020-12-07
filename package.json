@@ -7,10 +7,13 @@
   "license": "MIT",
   "dependencies": {
     "@types/evernote": "^2.0.0",
+    "@types/express": "^4.17.9",
     "commander": "^6.2.0",
     "dotenv": "^8.2.0",
     "evernote": "^2.0.5",
-    "oauth": "^0.9.15"
+    "express": "^4.17.1",
+    "oauth": "^0.9.15",
+    "open": "^7.3.0"
   },
   "devDependencies": {
     "typescript": "^4.0.5"
@@ -22,8 +25,11 @@
     "test-compile": "tsc -p ./",
     "compile": "tsc -p ./",
     "lint": "eslint src --ext ts",
-    "watch": "tsc -watch -p ./",
+    "watch": "tsc -watch -p --sourcemap ./",
     "pretest": "yarn run compile && yarn run lint",
     "test": "node ./out/test/runTest.js"
+  },
+  "bin": {
+    "evernode": "./dist/index.js"
   }
 }

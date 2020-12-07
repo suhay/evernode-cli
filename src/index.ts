@@ -1,49 +1,124 @@
-import path from 'path'
-import fs from 'fs'
-import * as rl from 'readline'
-import os from 'os'
 import { program } from 'commander'
+import Evernote from 'evernote'
 
-import { client, getNotebooks } from './api'
-
-const readline = rl.createInterface({
-  input: process.stdin,
-  output: process.stdout
-})
-
-const homedir = os.homedir()
-const pathToConfig = path.resolve(`${homedir}/.evernode`)
+import { 
+  client,
+  setRoot,
+  openNotebook,
+  openNote,
+  listNotebooks,
+  listNotes,
+  updateNote,
+  createNote
+} from './api'
+import { 
+  config,
+  getNote,
+  isNotebook,
+  isRoot,
+  saveNotebooks,
+  saveNotes
+} from './utils'
 
 program
-  .option('-l, --list', 'list all notebooks')
+  .version('0.0.1')
   .option('-i, --init', 'sets current directory as the notebook root')
-  .option('-o, --open', 'opens the specified notebook and downloads all notes')
-  .option('-s, --sync', 'syncs the current notebook directory, or updates notebook cache if within the notebook root'
+  .option('-l, --list', 'list all notebooks')
+  .option('-o, --open <name>', 'opens the specified notebook, or note, and downloads its metadata')
+  .option('-n, --new <name>', 'creates a new note with the given name and syncs it to the notebook')
+  .option('-s, --sync [note]', 'syncs the current notebook directory, or updates notebook cache if within the notebook root')
 
-program.version('0.0.1')
+const init = (client: Evernote.Client) => {
+  return setRoot(client)
+}
 
-if (!fs.existsSync(`${pathToConfig}/.config`)) {
-  readline.question('Personal token: ', token => {
-    if (!fs.existsSync(pathToConfig)){
-      fs.mkdirSync(pathToConfig, {
-        mode: 0o700
+const open = (client: Evernote.Client, name: string) => {
+  if (isRoot()) {
+    return openNotebook(client, name)
+  } else if (isNotebook()) {
+    return openNote(client, name)
+  }
+
+  return Promise.reject('Nothing here to open')
+}
+
+const list = (client: Evernote.Client) => {
+  if (isRoot()) {
+    return listNotebooks(client)
+      .then((notebooks) => notebooks.map((notebook, i) => `${i + 1}: ${notebook.name}`).join('\n'))
+  } else if (isNotebook()) {
+    return listNotes(client)
+      .then((list) => list.notes?.map((note, i) => `${i + 1}: ${note.title}`).join('\n'))
+  }
+
+  return Promise.reject('Nothing here to list')
+}
+
+const sync = (client: Evernote.Client, noteName?: boolean | string) => {
+  if (noteName === true) {
+    if (isRoot()) {
+      console.log('Syncing notebook root...')
+
+      return listNotebooks(client)
+        .then((notebooks) => {
+          saveNotebooks(notebooks)
+          return 'Sync complete'
+        })
+    } else if (isNotebook()) {
+      console.log('Syncing notebook...')
+
+      return listNotes(client)
+        .then((notes) => {
+          saveNotes(notes)
+          return 'Sync complete'
       })
     }
+  } else if (typeof noteName === 'string') {
+    const note = getNote(noteName)
+    console.log('Syncing note...')
 
-    fs.writeFileSync(`${pathToConfig}/.config`, `TOKEN=${token}
-SANDBOX=true`)
-    readline.close()
-  })
-} else {
-  program.parse(process.argv)
-  const notebookClient = client()
-
-  if (noteClient) {
-    if (program.list) {
-      getNotebooks(notebookClient)
-        .finally(() => process.exit())
-    }
-  } else {
-    process.exit()
+    return note 
+      ? updateNote(client, note)
+      : Promise.reject('Couldn\'t find a note with that name')
   }
+  
+  return Promise.reject('Nothing here to sync')
 }
+
+const create = (client: Evernote.Client, noteName: string) => {
+  console.log(`Creating ${noteName}...`)
+  return createNote(client, noteName)
+}
+
+const main = async () => {
+  await config()
+    .then(() => client())
+    .then((authClient) => {
+      program.parse(process.argv)
+
+      if (authClient) {
+        if (program.list) {
+          return list(authClient)
+        } else if (program.init) {
+          return init(authClient)
+        } else if (program.open && program.open !== '') {
+          return open(authClient, program.open)
+        } else if (program.sync) {
+          return sync(authClient, program.sync)
+        } else if (program.new && program.new !== '') {
+          return create(authClient, program.new)
+        }
+      }
+
+      return Promise.reject('There was an error trying to log into your account')
+    })
+    .then((result) => {
+      console.log(result)
+    })
+    .catch((err) => {
+      console.error(err)
+    })
+    .finally(() => process.exit())
+}
+
+main()

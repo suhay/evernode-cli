@@ -21,7 +21,7 @@ import {
 } from './utils'
 
 program
-  .version('0.0.1')
+  .version('0.1.0')
   .option('-i, --init', 'sets current directory as the notebook root')
   .option('-l, --list', 'list all notebooks')
   .option('-o, --open <name>', 'opens the specified notebook, or note, and downloads its metadata')

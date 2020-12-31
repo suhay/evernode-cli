@@ -32,6 +32,6 @@
     "prepublishOnly": "tsc"
   },
   "bin": {
-    "evernode": "./dist/index.js"
+    "evernode": "./bin/index.js"
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@suhay/evernode-cli",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": "git@github.com:suhay/evernode-cli.git",

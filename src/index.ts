@@ -21,12 +21,13 @@ import {
 } from './utils'
 
 program
-  .version('0.1.0')
+  .version('0.1.2')
   .option('-i, --init', 'sets current directory as the notebook root')
   .option('-l, --list', 'list all notebooks')
   .option('-o, --open <name>', 'opens the specified notebook, or note, and downloads its metadata')
   .option('-n, --new <name>', 'creates a new note with the given name and syncs it to the notebook')
   .option('-s, --sync [note]', 'syncs the current notebook directory, or updates notebook cache if within the notebook root')
+  .option('--sandbox', 'set if you wish to connect to the sandbox instance of Evernote')
 
 const init = (client: Evernote.Client) => {
   return setRoot(client)
@@ -91,11 +92,11 @@ const create = (client: Evernote.Client, noteName: string) => {
 }
 
 const main = async () => {
-  await config()
-    .then(() => client())
-    .then((authClient) => {
-      program.parse(process.argv)
+  program.parse(process.argv)
 
+  await config()
+    .then(() => client(program.sandbox))
+    .then((authClient) => {
       if (authClient) {
         if (program.list) {
           return list(authClient)

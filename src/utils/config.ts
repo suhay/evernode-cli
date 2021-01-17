@@ -6,7 +6,6 @@ import readline from 'readline'
 
 const homedir = os.homedir()
 const pathToConfig = path.resolve(`${homedir}/.evernode`)
-const isSandBox = true
 
 dotenv.config({
   path: `${pathToConfig}/.config`
@@ -50,21 +49,18 @@ const askForSecret = () => {
 }
 
 export interface Config {
-  SANDBOX?: boolean
   TOKEN?: string
   KEY?: string
   SECRET?: string
 }
 
 export const getConfig = () => {
-  const { TOKEN: token, SANDBOX, KEY: consumerKey, SECRET: consumerSecret } = process.env
-  const sandbox = Boolean(SANDBOX ?? isSandBox)
+  const { TOKEN: token, KEY: consumerKey, SECRET: consumerSecret } = process.env
 
   return {
     token,
     consumerKey,
     consumerSecret,
-    sandbox
   }
 }
 
@@ -87,7 +83,6 @@ export const config = () => {
       }
   
       const parts: Config = {
-        SANDBOX: true,
         TOKEN: await askForToken()
       }
   

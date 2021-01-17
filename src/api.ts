@@ -32,8 +32,8 @@ const callbackServer = async (resolve: any) => {
   return await app.listen(3000)
 }
 
-export const client = () => {
-  const { token, sandbox, consumerKey, consumerSecret } = getConfig()
+export const client = (sandbox: boolean = false) => {
+  const { token, consumerKey, consumerSecret } = getConfig()
 
   if (token) { // If we have a straight up auth token, let's just use it.
     return Promise.resolve(
@@ -89,12 +89,11 @@ export const client = () => {
                 TOKEN: accessToken,
                 KEY: consumerKey,
                 SECRET: consumerSecret,
-                SANDBOX: sandbox
               })
 
               res(new Evernote.Client({
                 token: accessToken,
-                sandbox: true,
+                sandbox,
                 china: false,
               }))
             }

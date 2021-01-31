@@ -17,8 +17,8 @@ import {
   isNotebook,
   Note,
   getNoteContent,
-  applyTemplate,
-  getNoteUpdateTime
+  getNoteUpdateTime,
+  toEnNote
 } from './utils'
 
 const callbackServer = async (resolve: any) => {
@@ -249,7 +249,7 @@ export const createNote = (client: Evernote.Client, noteName: string) => {
   const noteStore = client.getNoteStore()
 
   const newNote: Evernote.Types.Note = {
-    content: applyTemplate(''),
+    content: toEnNote(''),
     title: noteName
   }
 

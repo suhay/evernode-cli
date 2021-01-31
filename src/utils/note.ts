@@ -1,5 +1,7 @@
 import Evernote from 'evernote'
 import fs from 'fs'
+import TurndownService from 'turndown'
+import marked from 'marked'
 
 const template = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">
@@ -12,20 +14,25 @@ export interface Note {
   updated?: number
 }
 
-export const applyTemplate = (content: string) => {
-  return template.replace(/{content}/gi, content)
+export const toEnNote = (content: string) => {
+  const html = marked(content, {
+    headerIds: false
+  })
+  return template.replace(/{content}/gi, html)
 }
 
-export const removeTemplate = (content: string) => {
-  return content.replace(/.*?<en-note>(.*?)<\/en-note>/gs, '$1')
+export const toMarkdown = (content: string) => {
+  const turndownService = new TurndownService()
+  const md = content.replace(/.*?<en-note>(.*?)<\/en-note>/gs, '$1')
+  return turndownService.turndown(md)
 }
 
 export const saveNotes = (list: Evernote.NoteStore.NotesMetadataList, notebook?: string) => {
   const cwd = `${process.cwd()}${notebook ? `/${notebook}` : ``}`
 
   const notes = list.notes?.map<Note>((note) => ({
-    title: note.title || '',
-    guid: note.guid || '',
+    title: note.title ?? `untitled-${Date.now()}`,
+    guid: note.guid ?? '',
     updateSequenceNum: note.updateSequenceNum,
     updated: note.updated
   }))
@@ -68,10 +75,7 @@ export const saveNote = (note: Evernote.Types.Note, isNew?: boolean) => {
         return localNote
       })
     fs.writeFileSync(`${cwd}/.evernode/.notes`, JSON.stringify(newNotes ?? []))
-    
-    if (note.content) {
-      fs.writeFileSync(`${cwd}/${note.title}.md`, removeTemplate(note.content || ''))
-    }
+    fs.writeFileSync(`${cwd}/${note.title ?? `untitled-${Date.now()}`}.md`, toMarkdown(note.content ?? ''))
   }
 }
 
@@ -79,7 +83,7 @@ export const getNote = (title: string) => {
   const notes = getNotes()
 
   if (notes) {
-    return notes.find((note) => note.title === title)
+    return notes.find((note) => note.title === title.replace('.md', ''))
   }
   
   return undefined
@@ -87,7 +91,7 @@ export const getNote = (title: string) => {
 
 export const getNoteContent = (note: Note) => {
   const cwd = `${process.cwd()}`
-  return applyTemplate(fs.readFileSync(`${cwd}/${note.title}.md`, 'utf-8'))
+  return toEnNote(fs.readFileSync(`${cwd}/${note.title}.md`, 'utf-8'))
 }
 
 export const getNoteUpdateTime = (note: Note) => {
